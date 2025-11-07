@@ -1,0 +1,80 @@
+version: 2.1
+
+orbs:
+  node: circleci/node@5.0.3
+
+jobs:
+  build:
+    docker:
+      - image: cimg/node:18.20
+    steps:
+      - checkout
+
+      # Install dependencies
+      - run:
+          name: Install dependencies
+          command: npm install
+
+      # Run ESLint
+      - run:
+          name: Run lint test
+          command: npx eslint .
+
+      # Run unit tests
+      - run:
+          name: Run unit tests
+          command: npm test
+
+      # Check for vulnerabilities
+      - run:
+          name: Run npm audit (vulnerability scan)
+          command: npm audit --audit-level=moderate || true
+
+  sonarqube:
+    docker:
+      - image: sonarsource/sonar-scanner-cli:latest
+    steps:
+      - checkout
+      - run:
+          name: Run SonarQube analysis
+          command: |
+            sonar-scanner \
+              -Dsonar.projectKey=security-backend \
+              -Dsonar.organization=myorg \
+              -Dsonar.sources=. \
+              -Dsonar.host.url=https://sonarcloud.io \
+              -Dsonar.login=$SONAR_TOKEN
+
+  newman_tests:
+    docker:
+      - image: postman/newman:alpine
+    steps:
+      - checkout
+      - run:
+          name: Run API tests with Newman
+          command: newman run tests/api_collection.json
+
+  deploy:
+    docker:
+      - image: cimg/node:18.20
+    steps:
+      - checkout
+      - run:
+          name: Simulate deployment
+          command: echo "✅ Deployment successful!"
+
+workflows:
+  version: 2
+  build_test_deploy:
+    jobs:
+      - build
+      - sonarqube:
+          requires:
+            - build
+      - newman_tests:
+          requires:
+            - build
+      - deploy:
+          requires:
+            - sonarqube
+            - newman_tests

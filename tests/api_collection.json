@@ -1,0 +1,50 @@
+{
+  "info": {
+    "name": "Backend API Tests",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Register User",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"email\": \"testuser@example.com\", \"password\": \"StrongPass!123\"}"
+        },
+        "url": {
+          "raw": "https://localhost:5000/api/register",
+          "protocol": "https",
+          "host": ["localhost"],
+          "port": "5000",
+          "path": ["api", "register"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Login User",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"email\": \"testuser@example.com\", \"password\": \"StrongPass!123\"}"
+        },
+        "url": {
+          "raw": "https://localhost:5000/api/login",
+          "protocol": "https",
+          "host": ["localhost"],
+          "port": "5000",
+          "path": ["api", "login"]
+        }
+      },
+      "response": []
+    }
+  ]
+}
