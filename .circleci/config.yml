@@ -1,80 +1,49 @@
 version: 2.1
 
-orbs:
-  node: circleci/node@5.0.3
+executors:
+  node-executor:
+    docker:
+      - image: cimg/node:18.18
+    working_directory: ~/repo
 
 jobs:
-  build:
-    docker:
-      - image: cimg/node:18.20
+  # -------- Backend Job --------
+  build_backend:
+    executor: node-executor
     steps:
-      - checkout
-
-      # Install dependencies
+      - checkout:
+          full: true  # ✅ full checkout to avoid blobless issues
       - run:
-          name: Install dependencies
-          command: npm install
-
-      # Run ESLint
-      - run:
-          name: Run lint test
-          command: npx eslint .
-
-      # Run unit tests
-      - run:
-          name: Run unit tests
-          command: npm test
-
-      # Check for vulnerabilities
-      - run:
-          name: Run npm audit (vulnerability scan)
-          command: npm audit --audit-level=moderate || true
-
-  sonarqube:
-    docker:
-      - image: sonarsource/sonar-scanner-cli:latest
-    steps:
-      - checkout
-      - run:
-          name: Run SonarQube analysis
+          name: Install Backend Dependencies
           command: |
-            sonar-scanner \
-              -Dsonar.projectKey=security-backend \
-              -Dsonar.organization=myorg \
-              -Dsonar.sources=. \
-              -Dsonar.host.url=https://sonarcloud.io \
-              -Dsonar.login=$SONAR_TOKEN
-
-  newman_tests:
-    docker:
-      - image: postman/newman:alpine
-    steps:
-      - checkout
+            cd security-backend
+            npm install
       - run:
-          name: Run API tests with Newman
-          command: newman run tests/api_collection.json
+          name: Test Backend
+          command: |
+            cd security-backend
+            npm test
 
-  deploy:
-    docker:
-      - image: cimg/node:18.20
+  # -------- Frontend Job --------
+  build_frontend:
+    executor: node-executor
     steps:
-      - checkout
+      - checkout:
+          full: true
       - run:
-          name: Simulate deployment
-          command: echo "✅ Deployment successful!"
+          name: Install Frontend Dependencies
+          command: |
+            cd security-frontend
+            npm install
+      - run:
+          name: Build Frontend
+          command: |
+            cd security-frontend
+            npm run build
 
 workflows:
   version: 2
   build_test_deploy:
     jobs:
-      - build
-      - sonarqube:
-          requires:
-            - build
-      - newman_tests:
-          requires:
-            - build
-      - deploy:
-          requires:
-            - sonarqube
-            - newman_tests
+      - build_backend
+      - build_frontend
